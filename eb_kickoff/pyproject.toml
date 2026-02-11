@@ -1,0 +1,7 @@
+[project]
+name = "eb-kickoff"
+version = "0.1.0"
+description = "Local mode kickoff script"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["a2a-sdk[http-server]>=0.3.22", "httpx>=0.28.1"]

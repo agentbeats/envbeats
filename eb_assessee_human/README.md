@@ -1,0 +1,1 @@
+Don't forget to configure auth in browser session.

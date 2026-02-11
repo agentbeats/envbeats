@@ -1,0 +1,12 @@
+[clients.assessor]
+auth_token = "123"
+
+[clients.assessee]
+auth_token = "456"
+
+[mcp_servers.gym_mcp]
+url = "http://localhost:9500/mcp"
+from_client = "assessor"
+
+[allow.gym_mcp]
+assessee = ["*"]

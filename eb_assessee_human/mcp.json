@@ -1,0 +1,9 @@
+{
+    "mcpServers": {
+        "default-server": {
+            "type": "streamable-http",
+            "url": "http://localhost:9000/mcp",
+            "note": "MCP-X Gateway"
+        }
+    }
+}

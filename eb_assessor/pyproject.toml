@@ -1,0 +1,15 @@
+[project]
+name = "eb-assessor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "a2a-sdk>=0.3.22",
+    "mcp>=1.26.0",
+    "openenv-core>=0.2.1",
+    "openenv-echo-env",
+]
+
+[tool.uv.sources]
+openenv-echo-env = { git = "https://huggingface.co/spaces/openenv/echo_env" }

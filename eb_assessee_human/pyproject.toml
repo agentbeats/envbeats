@@ -1,0 +1,7 @@
+[project]
+name = "eb-assessee-human"
+version = "0.1.0"
+description = "let human trigger MCP manually"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["a2a-sdk[http-server]>=0.3.22", "uvicorn>=0.40.0"]
