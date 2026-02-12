@@ -17,9 +17,10 @@ class HelloWorldAgentExecutor(AgentExecutor):
 
     def __init__(self):
         self.agent = Agent(
-            mode='stream',
+            mode="stream",
             token_stream_callback=print,
-            mcp_url='https://gitmcp.io/google/A2A',
+            mcp_url="http://localhost:9000/mcp/",
+            mcp_bearer_token="456",
         )
 
     @override
@@ -32,14 +33,14 @@ class HelloWorldAgentExecutor(AgentExecutor):
         task = context.current_task
 
         if not context.message:
-            raise Exception('No message provided')
+            raise Exception("No message provided")
 
         if not task:
             task = new_task(context.message)
             await event_queue.enqueue_event(task)
 
         async for event in self.agent.stream(query):
-            if event['is_task_complete']:
+            if event["is_task_complete"]:
                 await event_queue.enqueue_event(
                     TaskArtifactUpdateEvent(
                         append=False,
@@ -47,9 +48,9 @@ class HelloWorldAgentExecutor(AgentExecutor):
                         task_id=task.id,
                         last_chunk=True,
                         artifact=new_text_artifact(
-                            name='current_result',
-                            description='Result of request to agent.',
-                            text=event['content'],
+                            name="current_result",
+                            description="Result of request to agent.",
+                            text=event["content"],
                         ),
                     )
                 )
@@ -61,13 +62,13 @@ class HelloWorldAgentExecutor(AgentExecutor):
                         task_id=task.id,
                     )
                 )
-            elif event['require_user_input']:
+            elif event["require_user_input"]:
                 await event_queue.enqueue_event(
                     TaskStatusUpdateEvent(
                         status=TaskStatus(
                             state=TaskState.input_required,
                             message=new_agent_text_message(
-                                event['content'],
+                                event["content"],
                                 task.context_id,
                                 task.id,
                             ),
@@ -84,7 +85,7 @@ class HelloWorldAgentExecutor(AgentExecutor):
                         status=TaskStatus(
                             state=TaskState.working,
                             message=new_agent_text_message(
-                                event['content'],
+                                event["content"],
                                 task.context_id,
                                 task.id,
                             ),
@@ -96,7 +97,5 @@ class HelloWorldAgentExecutor(AgentExecutor):
                 )
 
     @override
-    async def cancel(
-        self, context: RequestContext, event_queue: EventQueue
-    ) -> None:
-        raise Exception('cancel not supported')
+    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+        raise Exception("cancel not supported")

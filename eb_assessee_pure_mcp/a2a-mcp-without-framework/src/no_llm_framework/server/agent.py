@@ -16,13 +16,16 @@ from no_llm_framework.server.mcp import call_mcp_tool, get_mcp_tool_prompt
 
 dir_path = Path(__file__).parent
 
-with Path(dir_path / 'decide.jinja').open('r') as f:
+with Path(dir_path / "decide.jinja").open("r") as f:
     decide_template = Template(f.read())
 
-with Path(dir_path / 'tool.jinja').open('r') as f:
+with Path(dir_path / "gym.jinja").open("r") as f:
+    gym_template = Template(f.read())
+
+with Path(dir_path / "tool.jinja").open("r") as f:
     tool_template = Template(f.read())
 
-with Path(dir_path / 'called_tools_history.jinja').open('r') as f:
+with Path(dir_path / "called_tools_history.jinja").open("r") as f:
     called_tools_history_template = Template(f.read())
 
 
@@ -37,7 +40,7 @@ def stream_llm(prompt: str) -> Generator[str, None]:
     """
     client = genai.Client(vertexai=False, api_key=GOOGLE_API_KEY)
     for chunk in client.models.generate_content_stream(
-        model='gemini-2.5-flash-lite',
+        model="gemini-2.5-flash-lite",
         contents=prompt,
     ):
         yield chunk.text
@@ -48,13 +51,15 @@ class Agent:
 
     def __init__(
         self,
-        mode: Literal['complete', 'stream'] = 'stream',
+        mode: Literal["complete", "stream"] = "stream",
         token_stream_callback: Callable[[str], None] | None = None,
         mcp_url: str | None = None,
+        mcp_bearer_token: str | None = None,
     ):
         self.mode = mode
         self.token_stream_callback = token_stream_callback
         self.mcp_url = mcp_url
+        self.mcp_bearer_token = mcp_bearer_token
 
     def call_llm(self, prompt: str) -> Generator[str, None]:
         """Call the LLM with the given prompt and return a generator of responses.
@@ -78,19 +83,24 @@ class Agent:
         """
         if self.mcp_url is None:
             return self.call_llm(question)
-        tool_prompt = await get_mcp_tool_prompt(self.mcp_url)
+        tool_prompt = await get_mcp_tool_prompt(self.mcp_url, self.mcp_bearer_token)
         if called_tools:
             called_tools_prompt = called_tools_history_template.render(
                 called_tools=called_tools
             )
         else:
-            called_tools_prompt = ''
+            called_tools_prompt = ""
 
-        prompt = decide_template.render(
+        # prompt = decide_template.render(
+        prompt = gym_template.render(
             question=question,
             tool_prompt=tool_prompt,
             called_tools=called_tools_prompt,
         )
+        # # for debugging, write the final prompt to a file
+        # with open(dir_path / "final_prompt.txt", "a") as f:
+        #     f.write("\n\n====================\n\n")
+        #     f.write(prompt)
         return self.call_llm(prompt)
 
     def extract_tools(self, response: str) -> list[dict]:
@@ -99,7 +109,7 @@ class Agent:
         Args:
             response (str): The response from the LLM.
         """
-        pattern = r'```json\n(.*?)\n```'
+        pattern = r"```json\n(.*?)\n```"
         match = re.search(pattern, response, re.DOTALL)
         if match:
             return json.loads(match.group(1))
@@ -113,7 +123,12 @@ class Agent:
         """
         return await asyncio.gather(
             *[
-                call_mcp_tool(self.mcp_url, tool['name'], tool['arguments'])
+                call_mcp_tool(
+                    self.mcp_url,
+                    tool["name"],
+                    tool["arguments"],
+                    bearer_token=self.mcp_bearer_token,
+                )
                 for tool in tools
             ]
         )
@@ -130,30 +145,40 @@ class Agent:
         called_tools = []
         for i in range(10):
             yield {
-                'is_task_complete': False,
-                'require_user_input': False,
-                'content': f'Step {i}',
+                "is_task_complete": False,
+                "require_user_input": False,
+                "content": f"Step {i}",
             }
 
-            response = ''
+            response = ""
             for chunk in await self.decide(question, called_tools):
                 response += chunk
                 yield {
-                    'is_task_complete': False,
-                    'require_user_input': False,
-                    'content': chunk,
+                    "is_task_complete": False,
+                    "require_user_input": False,
+                    "content": chunk,
                 }
             tools = self.extract_tools(response)
             if not tools:
                 break
             results = await self.call_tool(tools)
 
+            # # debug
+            # with open(dir_path / "called_tools.txt", "a") as f:
+            #     f.write("\n\n====================\n\n")
+            #     f.write(f"Question: {question}\n")
+            #     f.write(f"Response: {response}\n")
+            #     f.write(f"Extracted tools: {json.dumps(tools, indent=2)}\n")
+            #     f.write(
+            #         f"Tool results: {json.dumps([result.model_dump() for result in results], indent=2)}\n"
+            #     )
+
             called_tools += [
                 {
-                    'tool': tool['name'],
-                    'arguments': tool['arguments'],
-                    'isError': result.isError,
-                    'result': result.content[0].text,
+                    "tool": tool["name"],
+                    "arguments": tool["arguments"],
+                    "isError": result.isError,
+                    "result": result.content[0].text,
                 }
                 for tool, result in zip(tools, results, strict=True)
             ]
@@ -161,27 +186,28 @@ class Agent:
                 called_tools=called_tools, question=question
             )
             yield {
-                'is_task_complete': False,
-                'require_user_input': False,
-                'content': called_tools_history,
+                "is_task_complete": False,
+                "require_user_input": False,
+                "content": called_tools_history,
             }
 
         yield {
-            'is_task_complete': True,
-            'require_user_input': False,
-            'content': 'Task completed',
+            "is_task_complete": True,
+            "require_user_input": False,
+            "content": "Task completed",
         }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     agent = Agent(
-        token_stream_callback=lambda token: print(token, end='', flush=True),
-        mcp_url='https://gitmcp.io/google/A2A',
+        token_stream_callback=lambda token: print(token, end="", flush=True),
+        mcp_url="http://localhost:9000/mcp/",
+        mcp_bearer_token="456",
     )
 
     async def main():
         """Main function."""
-        async for chunk in agent.stream('What is A2A Protocol?'):
+        async for chunk in agent.stream("What is A2A Protocol?"):
             print(chunk)
 
     asyncio.run(main())

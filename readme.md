@@ -21,16 +21,16 @@ uv run python main.py
 3. Start the assessee agent (at 9990 by default):
 
 ```bash
-cd eb_assessee_human
-uv run python main.py
+# remember to config the `.env` file first to include the key
+cd eb_assessee_pure_mcp/a2a-mcp-without-framework
+uv run --env-file ../.env python -m src.no_llm_framework.server.__main__ --port 9990
 ```
-
 or
 
 ```bash
-# WIP
-cd eb_assessee_pure_mcp
-uv run --env-file ../.env python -m src.no_llm_framework.server.__main__ --port 9990
+# remember to run `npx @modelcontextprotocol/inspector` first to install the inspector for MCP debugging
+cd eb_assessee_human
+uv run python main.py
 ```
 
 4. Kickoff the evaluation

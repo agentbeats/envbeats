@@ -10,9 +10,8 @@ from a2a.utils import new_agent_text_message
 from mcp.server.fastmcp import FastMCP
 
 from openenv.core.env_client import StepResult
-from echo_env import EchoAction, EchoEnv, EchoObservation
 from openenv.core.env_server.types import State
-
+from echo_env import EchoAction, EchoEnv, EchoObservation
 
 from my_util import send_message, parse_tags
 
@@ -42,6 +41,7 @@ def run_mcp(assessee_url: str, q: mp.Queue):
         @mcp.tool()
         def step(action: EchoAction) -> StepResult[EchoObservation]:
             r = client.step(action)
+            # print(f"MCP: Got step result: {r}")
             q.put(("step", _step_result_to_dict(r)))
             if r.done:
                 q.put(("done", "from env"))
@@ -56,6 +56,7 @@ def run_mcp(assessee_url: str, q: mp.Queue):
 
         @mcp.tool()
         def done():
+            # print("MCP: Received done signal from agent.")
             q.put(("done", "from assessee"))
             asyncio.get_event_loop().call_later(0.5, shutdown_event.set)
             return {"message": "Task marked as done."}
@@ -89,6 +90,7 @@ The environment is reset with following step result:
             server = uvicorn.Server(config)
             run_mcp_async = server.serve()
             run_mcp_task = asyncio.create_task(run_mcp_async)
+            await asyncio.sleep(1)  # wait for server to be ready
             send_msg_async = send_message(assessee_url, task_instruction)
             send_msg_task = asyncio.create_task(send_msg_async)
             await shutdown_event.wait()

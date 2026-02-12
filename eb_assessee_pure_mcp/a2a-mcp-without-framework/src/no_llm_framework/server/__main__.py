@@ -3,6 +3,7 @@ import uvicorn
 
 from a2a.server.agent_execution import AgentExecutor
 from a2a.server.apps import A2AStarletteApplication
+from a2a.server.context import ServerCallContext
 from a2a.server.request_handlers.default_request_handler import (
     DefaultRequestHandler,
 )
@@ -11,10 +12,10 @@ from a2a.types import (
     AgentCapabilities,
     AgentCard,
     AgentSkill,
-    GetTaskRequest,
-    GetTaskResponse,
-    SendMessageRequest,
-    SendMessageResponse,
+    Message,
+    MessageSendParams,
+    Task,
+    TaskQueryParams,
 )
 
 from no_llm_framework.server.agent_executor import HelloWorldAgentExecutor
@@ -28,13 +29,15 @@ class A2ARequestHandler(DefaultRequestHandler):
     ):
         super().__init__(agent_executor, task_store)
 
-    async def on_get_task(self, request: GetTaskRequest) -> GetTaskResponse:
-        return await super().on_get_task(request)
+    async def on_get_task(
+        self, params: TaskQueryParams, context: ServerCallContext | None = None
+    ) -> Task | None:
+        return await super().on_get_task(params, context)
 
     async def on_message_send(
-        self, request: SendMessageRequest
-    ) -> SendMessageResponse:
-        return await super().on_message_send(request)
+        self, params: MessageSendParams, context: ServerCallContext | None = None
+    ) -> Message | Task:
+        return await super().on_message_send(params, context)
 
 
 @click.command()

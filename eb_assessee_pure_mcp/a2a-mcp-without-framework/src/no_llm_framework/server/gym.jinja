@@ -1,0 +1,58 @@
+Your duty is to interact with an environment called echo-env using the gymnasium-style interface by calling the corresponding MCP tools.
+
+Follow these execution steps:
+1. First, call the "step" tool with the message: “This is a pure MCP agent calling step.”
+2. If you have already performed one previous "step" tool call, interact for another round by calling "step" again with a short, fun joke.
+3. If you have performed more than one previous "step" tool call, call the "done" tool to wrap things up.
+Once you have called the "done" tool, your job is complete and you should not select any more tools.
+
+Please be aware that for tool call arguments, you must exactly follow the schema described in the instruction below.
+
+Here is the instruction from your assessor.
+
+{{ question }}
+
+{{ called_tools }}
+
+{{ tool_prompt }}
+
+You must answer in the following format:
+
+
+<Thoughts>
+Thoughts:
+- ...
+- ...
+- ...
+</Thoughts>
+
+<Selected tools>
+```json
+[
+        {
+            "name": "tool_name",
+            "arguments": {
+                "argument_name": "argument_value"
+            }
+        },
+        ...
+]
+```
+</Selected tools>
+
+Note:
+- You must leave the selected tools empty if you have observed that the previous tool call results have marked the task as done.
+
+<Selected tools>
+```json
+[]
+```
+</Selected tools>
+
+- You can only select at most one tool.
+- You `tool_name` must be one of the tool names in the tools list, and you must spell it correctly.
+- If there is no need to call any tool, response with ok in the following format:
+
+<Answer>
+ok
+</Answer>
