@@ -2,6 +2,38 @@
 
 This is an example repo demonstrating integration between OpenEnv and AgentBeats.
 
+```
+Kickoff: "Assess agent at url=..."
+  │
+  v
+┌────────────────┐   (1) init / reset()  ┌───────────┐
+│                │──────────────────────>│           │
+│  Assessor A2A  │  (return StepResult   │  OpenEnv  │
+│                │       from reset)     │           │
+└────────────────┘                       └───────────┘
+  │          │                                 ^
+  │          │                                 │ exposes
+  │          │                                 v
+  │          │  (2) Create New MCP server ┌─────────┐        ┌───────────────┐
+  │          └───────────────────────────>│         │───────>│               │
+  │             & connect to gateway      │ New MCP │        │ MCP-X Gateway │
+  │                                       │         │<───────│               │
+  │                                       └─────────┘        └───────────────┘
+  │                                      (done or                   ^
+  │                                       timeout)                  │ (5)
+  │                                                                 │ step()
+  │                                                                 │ state()
+  │                                                                 │
+  │  (3) Send task instructions                                     │
+  │      (include reset() StepResult)    ┌────────────────┐         │
+  └─────────────────────────────────────>│                │─────────┘
+                                         │  Assessee A2A  │
+                      (4) "Ok will do"   │                │
+                        <────────────────│                │
+                                         └────────────────┘
+```
+
+
 ## How to run
 
 1. Start MCP-X (at 9000 by default):
