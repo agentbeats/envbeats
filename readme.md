@@ -50,14 +50,25 @@ cd eb_assessor
 uv run python main.py
 ```
 
-3. Start the assessee agent (at 9990 by default):
+3. Start the assessee agent (at 9990 by default): 
+
+Here we provide three examples, you can choose to run any one of them or all of them to see how different assessees interact with the assessor and the environment.
+- `eb_assessee_gym`: a gym-style agent implementation using MCP tools to interact with the environment
+
+```bash
+cd eb_assessee_gym
+uv run python main.py
+```
+
+- `eb_assessee_pure_mcp`: a slightly modified, llm-driven a2a agent directly from google's repo without using any LLM framework
 
 ```bash
 # remember to config the `.env` file first to include the key
 cd eb_assessee_pure_mcp/a2a-mcp-without-framework
 uv run --env-file ../.env python -m src.no_llm_framework.server.__main__ --port 9990
 ```
-or
+
+- `eb_assessee_human`: a human-in-the-loop example where the human can trigger MCP calls manually 
 
 ```bash
 # remember to run `npx @modelcontextprotocol/inspector` first to install the inspector for MCP debugging
